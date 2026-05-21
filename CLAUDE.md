@@ -18,6 +18,10 @@ Working codebase. 68 Python unit tests (`python3 -m unittest discover tests`). S
 - `token_dashboard/server.py` exposes JSON APIs (`/api/*`) + SSE stream (`/api/stream`) + static frontend (`web/`)
 - `web/` is vanilla JS, no build step — hash router + ECharts
 
+Module map (`token_dashboard/`): `scanner.py` (JSONL → DB), `db.py` (schema + query helpers), `server.py` (HTTP + SSE + routes), `pricing.py` (plan/model cost lookup), `skills.py` (skills catalog scan), `tips.py` (rule-based suggestions).
+
+To add a new API route: handler branch in `server.py`, SQL helper in `db.py`, test under `tests/`.
+
 ## Data source
 
 Claude Code writes one JSONL file per session to `~/.claude/projects/<project-slug>/<session-id>.jsonl`. Each line is a message record; usage fields live at `message.usage` and model identifier at `message.model`. The scanner is incremental — it tracks each file's mtime and byte offset in the `files` table and only reads new bytes on subsequent scans.
@@ -38,10 +42,21 @@ Env vars: `PORT` (default 8080), `HOST` (default 127.0.0.1), `CLAUDE_PROJECTS_DI
 
 See `docs/KNOWN_LIMITATIONS.md`. Current summary: Skills `tokens_per_call` is populated only for skills installed under the three scanned roots (`~/.claude/skills/`, `~/.claude/scheduled-tasks/`, `~/.claude/plugins/`); project-local skills and subagent-dispatched skills show invocation counts but blank token counts.
 
-## Verifying changes
+## Commands
 
 ```bash
-python3 -m unittest discover tests        # all tests
-python3 cli.py dashboard --no-open        # start the server
-curl http://127.0.0.1:8080/api/overview   # sanity-check an endpoint
+# CLI verbs (each accepts --db and --projects-dir)
+python3 cli.py scan       # populate / refresh local DB, then exit
+python3 cli.py today      # today's totals (terminal)
+python3 cli.py stats      # all-time totals (terminal)
+python3 cli.py tips       # active suggestions (terminal)
+python3 cli.py dashboard [--no-scan] [--no-open]   # scan + serve UI at http://localhost:8080
+
+# Tests
+python3 -m unittest discover tests                       # all (≈5s, stdlib only)
+python3 -m unittest tests.test_scanner_dedup             # one module
+python3 -m unittest tests.test_scanner_dedup.TestDedup.test_specific_case   # one test
+
+# Sanity-check the running server
+curl http://127.0.0.1:8080/api/overview
 ```
