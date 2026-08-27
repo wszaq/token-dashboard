@@ -62,6 +62,11 @@ CREATE TABLE IF NOT EXISTS tool_calls (
 CREATE INDEX IF NOT EXISTS idx_tools_session ON tool_calls(session_id);
 CREATE INDEX IF NOT EXISTS idx_tools_name    ON tool_calls(tool_name);
 CREATE INDEX IF NOT EXISTS idx_tools_target  ON tool_calls(target);
+-- scanner.py deletes by message_uuid once per message (idempotent rescan) and
+-- again per streaming-snapshot eviction. Unindexed that was a full tool_calls
+-- scan per message, making a cold scan quadratic: 50 files/42MB took 2s, but
+-- 600/320MB took 145s, and a full 1.1GB scan never finished.
+CREATE INDEX IF NOT EXISTS idx_tools_msg_uuid ON tool_calls(message_uuid);
 
 CREATE TABLE IF NOT EXISTS plan (
   k TEXT PRIMARY KEY,
@@ -114,6 +119,14 @@ def _migrate_add_message_id(conn) -> None:
 def connect(path: Union[str, Path]):
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
+    # WAL: the rollback journal rewrote pages on every commit, which is the bulk
+    # of cold-scan write cost; it also let a running scan block all readers.
+    # Persisted in the file header, so this is a no-op after the first call.
+    # synchronous=NORMAL trades an fsync per commit for one per checkpoint --
+    # a crash can lose recent rows but cannot corrupt, and this DB is a cache
+    # rebuildable from the JSONL transcripts.
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA synchronous = NORMAL")
     conn.execute("PRAGMA foreign_keys = ON")
     try:
         yield conn

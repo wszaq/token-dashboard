@@ -242,6 +242,12 @@ def scan_file(path: Path, project_slug: str, conn, start_byte: int = 0) -> dict:
     return {"messages": msgs, "tools": tools, "end_offset": end_offset}
 
 
+# Files per commit during a directory scan. Small enough that an interrupted
+# cold scan loses little work, large enough to keep commit overhead off the
+# hot path.
+COMMIT_EVERY_FILES = 50
+
+
 def scan_dir(projects_root: Union[str, Path], db_path: Union[str, Path]) -> dict:
     root = Path(projects_root)
     totals = {"messages": 0, "tools": 0, "files": 0}
@@ -273,5 +279,12 @@ def scan_dir(projects_root: Union[str, Path], db_path: Union[str, Path]) -> dict
             totals["messages"] += sub["messages"]
             totals["tools"]    += sub["tools"]
             totals["files"]    += 1
+            # Commit at file boundaries. A single transaction across the whole
+            # tree meant an interrupted cold scan committed NOTHING -- two
+            # ~200MB part-files were left holding zero rows. The files row for
+            # p is written above, so a boundary is a consistent point and a
+            # re-run resumes from the last committed high-water mark.
+            if totals["files"] % COMMIT_EVERY_FILES == 0:
+                conn.commit()
         conn.commit()
     return totals
