@@ -27,6 +27,11 @@ class CostTests(unittest.TestCase):
         c = cost_for("claude-sonnet-4-6", self._u(output_tokens=1_000_000), self.p)
         self.assertAlmostEqual(c["usd"], 15.00, places=4)
 
+    def test_opus_5_5_cache_read_cost(self):
+        c = cost_for("claude-opus-5-5", self._u(cache_read_tokens=1_000_000), self.p)
+        self.assertAlmostEqual(c["usd"], 0.20, places=4)
+        self.assertFalse(c["estimated"])
+
     def test_unknown_opus_falls_back(self):
         c = cost_for("claude-opus-9-9-experimental", self._u(input_tokens=1_000_000), self.p)
         self.assertAlmostEqual(c["usd"], 15.00, places=4)
