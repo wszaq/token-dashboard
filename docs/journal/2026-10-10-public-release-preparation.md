@@ -31,3 +31,10 @@ Correction: the wiki check examined 22 target links, not 27. All 22 targets pass
 Gitleaks 8.30.1 scanned all 33 existing commits and the final working files. It found no secrets.
 A separate history check examined 100 blobs and commit messages for personal paths, private network defaults, and credentials. It found none.
 The two screenshots match the public upstream blob IDs. The final suite passed 74 tests.
+
+## Publication status
+
+Committed and pushed the verified preparation as 470f70d.
+GitHub reports the repository as public and the wiki as enabled. Anonymous repository access returns HTTP 200.
+The first wiki page still needs browser creation. The locked Mac prevents that step.
+All eight wiki source files are committed in docs/wiki, ready for publication after the Mac is unlocked.
