@@ -38,3 +38,10 @@ Committed and pushed the verified preparation as 470f70d.
 GitHub reports the repository as public and the wiki as enabled. Anonymous repository access returns HTTP 200.
 The first wiki page still needs browser creation. The locked Mac prevents that step.
 All eight wiki source files are committed in docs/wiki, ready for publication after the Mac is unlocked.
+
+## Wiki publication completed
+
+The operator unlocked the Mac. Created the initial GitHub Wiki page in the browser.
+Published seven complete wiki pages plus the sidebar from the committed sources.
+All seven pages passed anonymous HTTP 200 and title checks. Published files match the repository wiki sources.
+The repository and wiki are public. No release items remain open.
