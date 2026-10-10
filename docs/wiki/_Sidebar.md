@@ -1,0 +1,8 @@
+- [Home](Home)
+- [Installation](Installation)
+- [Usage](Usage)
+- [Reference](Reference)
+- [Privacy and accuracy](Privacy-and-Accuracy)
+- [Troubleshooting](Troubleshooting)
+- [Contributing](Contributing)
+- [Repository](https://github.com/wszaq/token-dashboard)

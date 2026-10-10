@@ -1,29 +1,38 @@
-# Known Limitations
+# Known limitations
 
-None of these are blockers — the dashboard still gives you useful information. They're the rough edges you'll notice if you look hard.
+## Partial skill estimates
 
-## Skills token counts are partial
+The skill catalog scans `~/.claude/skills/`, `~/.claude/scheduled-tasks/`, and `~/.claude/plugins/`.
+Other skills can have invocation counts without a text-size estimate.
+The estimate is not actual per-invocation token use.
 
-The Skills route shows every skill Claude Code invoked, how many times, across how many sessions, and when. The **tokens-per-call** column is populated only for skills whose `SKILL.md` lives under `~/.claude/skills/`, `~/.claude/scheduled-tasks/`, or `~/.claude/plugins/`. Skills registered elsewhere (project-local `.claude/skills/`, or invocations that go through the `Task` tool with a skill-shaped `subagent_type`) show invocation counts but leave the token column blank.
+## Estimated costs
 
-It's still a useful view — you can see which skills dominate your session time — just don't expect a complete per-skill token cost. PRs to broaden the catalog scan welcome.
+Costs use the local pricing table, not invoice data.
+Unknown models without a recognized tier have no cost estimate.
+The Overview total omits these models.
+Prompt cost estimates use cache-read tokens only.
+Plan labels do not convert API-equivalent costs into subscription charges.
 
-## Cost for Pro / Max / Max-20x users is shown as API-equivalent, not subscription value
+## Local transcripts only
 
-The Settings route lets you select your pricing plan, but the Overview cost number is always the API-equivalent (what the same usage would have cost on pay-per-token rates). If you're on Pro you pay a flat $20/month regardless of how much of that API-equivalent number you rack up. We don't do "subscription ROI" math yet — Anthropic doesn't publish per-plan rate limits as public JSON, and faking it would be worse than not doing it.
+Sessions without local JSONL files are invisible.
+The dashboard supports Claude Code transcript formats, not every agent tool's history.
 
-## Cowork sessions are invisible
+## Scan and filter limits
 
-If you use Claude's Cowork mode (server-side sessions, not local `claude` CLI), those sessions don't write JSONL to `~/.claude/projects/` and the dashboard can't see them.
+A first scan can take time for a large history.
+Later scans use file offsets and modification times.
+Not all routes use a common time filter. Prompts and Tips query all cached data.
+`today` uses UTC boundaries.
 
-## Non-standard model names get tier-fallback pricing
+## One writer per database
 
-If a transcript references a model ID not in `pricing.json` (e.g. a future snapshot that isn't in our table yet), cost is estimated from the tier substring (`opus` / `sonnet` / `haiku`) in the name. The UI marks these as `estimated: true`. If the model name contains none of those substrings, cost is reported as null.
+Run one dashboard process per database to avoid lock conflicts.
+The server has no remote authentication or TLS. Keep its loopback bind address.
 
-## First scan can be slow
+## Tested environment
 
-The first `python3 cli.py scan` on a heavy user's machine can read tens of MB across hundreds of JSONLs. Subsequent scans are incremental (mtime + byte-offset tracking in the `files` table), so they're fast.
-
-## Running two dashboards against the same DB
-
-Both will fight over the SQLite file and you'll see inconsistent numbers and occasional `database is locked` errors. Only run one at a time. If you want to view the dashboard from a second device, use `HOST=0.0.0.0` on the one running machine and point the second device's browser at it.
+The release check ran 74 Python tests on macOS with Python 3.14.
+Python 3.14 emitted resource warnings for test database connections and server sockets.
+The checks passed. Other Python versions and operating systems need separate verification.
