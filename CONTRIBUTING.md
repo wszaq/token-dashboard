@@ -1,5 +1,12 @@
 # Contributing
 
+## Report a bug
+
+Open an issue in this repository. Describe the problem and the expected behavior.
+Include your operating system, Python version, the command that you ran, and a synthetic reproduction.
+Do not include real prompts, transcripts, or databases.
+For a security issue, follow [SECURITY.md](SECURITY.md) instead.
+
 ## Prepare a change
 
 Fork the repository. Create a branch for one focused change.
